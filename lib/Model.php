@@ -444,10 +444,10 @@ class Model
 		if ($value instanceof \DateTime)
 			$value = new DateTime($value->format('Y-m-d H:i:s T'));
 
-		// make sure DateTime values know what model they belong to so
-		// dirty stuff works when calling set methods on the DateTime object
-		if ($value instanceof DateTime || $value instanceof Binary)
-			$value->attribute_of($this,$name);
+		// make sure Attribute values know what model they belong to so
+		// dirty stuff works when calling set methods on the Attribute object
+		if ($value instanceof InterfaceAttribute)
+			$value->attribute_of($this, $name);
 
 		$this->attributes[$name] = $value;
 		$this->flag_dirty($name);
@@ -1725,5 +1725,5 @@ class Model
 		}
 		return true;
 	}
-};
+}
 ?>

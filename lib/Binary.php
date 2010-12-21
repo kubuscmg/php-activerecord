@@ -5,6 +5,22 @@
 namespace ActiveRecord;
 
 /**
+ * An interface of attributes that link them 
+ * 
+ * @package ActiveRecord
+ */
+interface InterfaceAttribute
+{
+	/**
+	 * Tell the attribute which model to dirty when its inner value changed
+	 * 
+	 * @param $model object the Model object
+	 * @param $attribute_name string name of the attribute
+	 */
+	public function attribute_of($model, $attribute_name);
+}
+
+/**
  * A type that handles Binary types and easy hex / bin conversion.
  *
  * All binary fields from your database will be created as instances of this class.
@@ -25,7 +41,7 @@ namespace ActiveRecord;
  *
  * @package ActiveRecord
  */
-class Binary
+class Binary implements InterfaceAttribute
 {
 	private $bin;
 	private $hex;
@@ -43,42 +59,70 @@ class Binary
 	}
 
 	public function __get($name) {
-		return $this->format($name);
+		if ($name == 'hex')
+			return $this->getHex();
+		if ($name == 'bin')
+			return $this->getBin();
+	}
+
+	public function __set($name, $value) {
+		if ($name == 'hex')
+			$this->setHex($value);
+		elseif ($name == 'bin')
+			$this->setBin($value);
 	}
 
 	public function format($format=null) {
 		switch ($format) {
 			case 'bin':
-				return $this->get_bin();
+				return $this->getBin();
 			case 'hex':
 			default:
-				return $this->get_hex();
+				return $this->getHex();
 		}
 	}
 
 	public function update($value) {
 		if ($value !== $this->bin && $value !== $this->hex) {
-			$this->flag_dirty();
 			$this->_update($value);
+			$this->flag_dirty();
+		}
+	}
+
+	public function setHex($value) {
+		if ($this->hex != $value) {
+			$this->hex = $value;
+			$this->bin = null;
+			$this->flag_dirty();
+		}
+	}
+	
+	public function setBin($value) {
+		if ($this->bin != $value) {
+			$this->bin = $value;
+			$this->hex = null;
+			$this->flag_dirty();
 		}
 	}
 
 	private function _update($value) {
 		if (preg_match('/^[0-9a-zA-Z]*$/', $value)) {
 			$this->hex = $value;
+			$this->bin = null;
 		} else {
 			$this->bin = $value;
+			$this->hex = null;
 		}
 	}
 
-	private function get_bin() {
+	private function getBin() {
 		if (!isset($this->bin)) {
 			$this->bin = pack('H*', $this->hex);
 		}
 		return $this->bin;
 	}
 
-	private function get_hex() {
+	private function getHex() {
 		if (!isset($this->hex)) {
 			$strings = unpack('H*', $this->bin);
 			$this->hex = $strings[1];
@@ -96,5 +140,4 @@ class Binary
 			$this->model->flag_dirty($this->attribute_name);
 	}
 }
-
 ?>
