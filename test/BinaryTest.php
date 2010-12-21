@@ -27,8 +27,25 @@ class BinaryTest extends DatabaseTest
 	{
 		$this->assert_dirtifies('update', md5('test'));
 		$this->assert_dirtifies('update', pack('H*', md5('test')));
+		$this->assert_dirtifies('update', base64_encode(pack('H*', md5('test'))));
 		$this->assert_dirtifies('setHex', md5('test'));
 		$this->assert_dirtifies('setBin', pack('H*', md5('test')));
+		$this->assert_dirtifies('setBase64', base64_encode(pack('H*', md5('test'))));
+	}
+
+	public function test_convertions()
+	{
+		$hex = md5('test');
+		$bin = pack('H*', $hex);
+		$b64 = base64_encode($bin);
+
+		foreach (array($hex, $bin, $b64) as $value) {
+			$binary = new Binary();
+			$binary->update($value);
+			$this->assert_equals($hex, $binary->hex);
+			$this->assert_equals($bin, $binary->bin);
+			$this->assert_equals($b64, $binary->base64);
+		}
 	}
 }
 ?>
