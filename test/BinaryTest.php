@@ -27,7 +27,8 @@ class BinaryTest extends DatabaseTest
 	{
 		$this->assert_dirtifies('update', md5('test'));
 		$this->assert_dirtifies('update', pack('H*', md5('test')));
+		$this->assert_dirtifies('setHex', md5('test'));
+		$this->assert_dirtifies('setBin', pack('H*', md5('test')));
 	}
 }
-
 ?>
