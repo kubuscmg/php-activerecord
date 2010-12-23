@@ -436,7 +436,7 @@ class Model
 	public function assign_attribute($name, $value)
 	{
 		$table = static::table();
-		
+
 		if (array_key_exists($name,$table->columns) && !is_object($value))
 			$value = $table->columns[$name]->cast($value,static::connection());
 

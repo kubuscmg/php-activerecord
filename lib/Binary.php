@@ -32,6 +32,7 @@ interface InterfaceAttribute
  *
  * echo $password->format();         # 5f4dcc3b5aa765d61d8327deb882cf99
  * echo $password->format('hex');    # 5f4dcc3b5aa765d61d8327deb882cf99
+ * echo $password->format('base64'); # X03MO1qnZdYdgyfeuILPmQ==
  * echo $password->format('bin');    # _some gibberish_
  *
  * # __toString() uses the hex formatter
@@ -45,6 +46,8 @@ class Binary implements InterfaceAttribute
 {
 	private $bin;
 	private $hex;
+	private $base64;
+
 	private $model;
 	private $attribute_name;
 
@@ -63,6 +66,8 @@ class Binary implements InterfaceAttribute
 			return $this->getHex();
 		if ($name == 'bin')
 			return $this->getBin();
+		if ($name == 'base64')
+			return $this->getBase64();
 	}
 
 	public function __set($name, $value) {
@@ -70,12 +75,16 @@ class Binary implements InterfaceAttribute
 			$this->setHex($value);
 		elseif ($name == 'bin')
 			$this->setBin($value);
+		elseif ($name == 'base64')
+			$this->setBase64($value);
 	}
 
 	public function format($format=null) {
 		switch ($format) {
 			case 'bin':
 				return $this->getBin();
+			case 'base64':
+				return $this->getBase64();
 			case 'hex':
 			default:
 				return $this->getHex();
@@ -83,7 +92,10 @@ class Binary implements InterfaceAttribute
 	}
 
 	public function update($value) {
-		if ($value !== $this->bin && $value !== $this->hex) {
+		if ($value !== $this->bin &&
+			$value !== $this->hex &&
+			$value !== $this->base64
+		) {
 			$this->_update($value);
 			$this->flag_dirty();
 		}
@@ -93,6 +105,7 @@ class Binary implements InterfaceAttribute
 		if ($this->hex != $value) {
 			$this->hex = $value;
 			$this->bin = null;
+			$this->base64 = null;
 			$this->flag_dirty();
 		}
 	}
@@ -101,34 +114,74 @@ class Binary implements InterfaceAttribute
 		if ($this->bin != $value) {
 			$this->bin = $value;
 			$this->hex = null;
+			$this->base64 = null;
 			$this->flag_dirty();
 		}
 	}
 
-	private function _update($value) {
-		if (preg_match('/^[0-9a-zA-Z]*$/', $value)) {
-			$this->hex = $value;
+	public function setBase64($value) {
+		if ($this->base64 != $value) {
+			$this->base64 = $value;
 			$this->bin = null;
-		} else {
-			$this->bin = $value;
 			$this->hex = null;
+			$this->flag_dirty();
 		}
 	}
 
-	private function getBin() {
+
+	private function _update($value) {
+		if (preg_match('/^[0-9a-zA-Z]+$/', $value)) {
+			$this->hex = $value;
+			$this->bin = null;
+			$this->base64 = null;
+		} elseif (preg_match('/^[a-zA-Z0-9=]+$/', $value)) {
+			$this->base64 = $value;
+			$this->bin = null;
+			$this->hex = null;
+		} else {
+			$this->bin = $value;
+			$this->hex = null;
+			$this->base64 = null;
+		}
+	}
+
+	private function &getBin() {
 		if (!isset($this->bin)) {
-			$this->bin = pack('H*', $this->hex);
+			if (isset($this->hex)) {
+				$this->bin = pack('H*', $this->hex);
+			} elseif (isset($this->base64)) {
+				$this->bin = base64_decode($this->base64);
+			}
 		}
 		return $this->bin;
 	}
 
-	private function getHex() {
+	private function &getHex() {
 		if (!isset($this->hex)) {
-			$strings = unpack('H*', $this->bin);
-			$this->hex = $strings[1];
+			if (isset($this->base64) && !isset($this->bin)) {
+				$this->bin = base64_decode($this->base64);
+			}
+			if (isset($this->bin)) {
+				$strings = unpack('H*', $this->bin);
+				$this->hex = $strings[1];
+			}
+
 		}
 		return $this->hex;
 	}
+
+	private function &getBase64() {
+		if (!isset($this->base64)) {
+			if (isset($this->hex) && !isset($this->bin)) {
+				$this->bin = pack('H*', $this->hex);
+			}
+			if (isset($this->bin)) {
+				$this->base64 = base64_encode($this->bin);
+			}
+		}
+		return $this->base64;
+	}
+
 
 	public function __toString() {
 		return $this->format();
