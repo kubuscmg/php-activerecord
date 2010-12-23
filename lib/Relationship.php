@@ -147,7 +147,31 @@ abstract class AbstractRelationship implements InterfaceRelationship
 
 		if (!empty($includes))
 			$options['include'] = $includes;
-			
+
+		if (!empty($options['through'])) {
+			// save old keys as we will be reseting them below for inner join convenience
+			$pk = $this->primary_key;
+			$fk = $this->foreign_key;
+
+			$this->set_keys($this->get_table()->class->getName(), true);
+
+			if (!isset($options['class_name'])) {
+				$class = classify($options['through'], true);
+				$through_table = $class::table();
+			} else {
+				$class = $options['class_name'];
+				$relation = $class::table()->get_relationship($options['through']);
+				$through_table = $relation->get_table();
+			}
+			$options['joins'] = $this->construct_inner_join_sql($through_table, true);
+
+			$query_key = $this->primary_key[0];
+
+			// reset keys
+			$this->primary_key = $pk;
+			$this->foreign_key = $fk;
+		}
+
 		$options = $this->unset_non_finder_options($options);
 
 		$class = $this->class_name;
@@ -492,8 +516,10 @@ class HasMany extends AbstractRelationship
 				$fk = $this->foreign_key;
 
 				$this->set_keys($this->get_table()->class->getName(), true);
-
-				$through_table = Table::load(classify($this->through, true));
+				
+				$class = $this->class_name;
+				$relation = $class::table()->get_relationship($this->through);
+				$through_table = $relation->get_table();
 				$this->options['joins'] = $this->construct_inner_join_sql($through_table, true);
 
 				// reset keys
