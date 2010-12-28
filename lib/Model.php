@@ -486,14 +486,6 @@ class Model
 			return $this->__relationships[$name];
 		}
 
-
-		if (substr($name, -6) == '_count' &&
-			($relationship = $table->get_relationship(substr($name, 0, -6))))
-		{
-			$this->__relationships[$name] = $relationship->load_count($this);
-			return $this->__relationships[$name];
-		}
-
 		if ($name == 'id')
 		{
 			$pk = $this->get_primary_key(true);
@@ -1298,6 +1290,7 @@ class Model
 		$table = static::table();
 		$sql = $table->options_to_sql($options);
 		$values = $sql->get_where_values();
+		$table->last_sql = $sql->to_s();
 		return $table->conn->query_and_fetch_one($sql->to_s(),$values);
 	}
 

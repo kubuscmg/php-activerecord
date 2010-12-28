@@ -474,26 +474,7 @@ class HasMany extends AbstractRelationship
 			$this->primary_key = Table::load($model_class_name)->pk;
 	}
 
-	public function load(Model $model)
-	{
-		if($init = $this->initialize($model))
-		{
-			extract($init);
-			return $class_name::find($this->poly_relationship ? 'all' : 'first', $options);
-		}
-	}
-
-
-	public function load_count(Model $model)
-	{
-		if($init = $this->initialize($model))
-		{
-			extract($init);
-			return $class_name::count($options);
-		}
-	}
-
-	private function initialize(Model $model) {
+	public function load(Model $model) {
 		$class_name = $this->class_name;
 		$this->set_keys(get_class($model));
 
@@ -535,7 +516,13 @@ class HasMany extends AbstractRelationship
 
 		$options = $this->unset_non_finder_options($this->options);
 		$options['conditions'] = $conditions;
-		return compact('class_name', 'options');
+
+        return ($this->poly_relationship) ? 
+            new RelatedObjects(array(
+                'class_name' => $class_name,
+                'options' => $options
+            )) :
+            $class_name::find('first', $options);
 	}
 
 	private function inject_foreign_key_for_new_association(Model $model, &$attributes)
@@ -681,4 +668,72 @@ class BelongsTo extends AbstractRelationship
 		$this->query_and_attach_related_models_eagerly($table,$models,$attributes,$includes, $this->primary_key,$this->foreign_key);
 	}
 };
+
+class RelatedObjects implements \ArrayAccess, \Countable, \IteratorAggregate {
+    protected $_class_name;
+    protected $_options;
+    protected $_data;
+    protected $_count;
+
+
+    public function __construct($options=array()) {
+        $this->_class_name = $options['class_name'];
+        $this->_options = $options['options'];
+    }
+
+    public function count() {
+        if (!isset($this->_count)) {
+            if (!isset($this->_data)) {
+                $class_name = $this->_class_name;
+                $this->_count = $class_name::count($this->_options);
+            } else {
+                $this->_count = count($this->_data);
+            }
+        }
+        return $this->_count;
+    }
+
+    protected function &fetch() {
+        if (!isset($this->_data)) {
+            $class_name = $this->_class_name;
+            $this->_data = $class_name::find('all', $this->_options);
+            $this->_count = count($this->_data);
+        }
+        return $this->_data;
+    }
+
+    public function getIterator() {
+        return new \ArrayIterator($this->fetch());
+    }
+
+    public function offsetExists($offset) {
+        $data = $this->fetch();
+        return isset($data[$offset]);
+    }
+
+    // Shouldn't it be read-only?
+    public function offsetSet($offset, $value) {
+        $data = $this->fetch();
+        if (is_null($offset)) {
+            $data[] = $value;
+        } else {
+            $data[$offset] = $value;
+        }
+    }
+
+    public function offsetGet($offset) {
+        $data = $this->fetch();
+        return isset($data[$offset]) ?
+            $data[$offset] :
+            null;
+    }
+    
+    // Shouldn't it be read-only?
+    public function offsetUnset($offset) {
+        $data = $this->fetch();
+        unset($data[$offset]);
+    }
+}
+
+# vim: set nobinary noet ts=4
 ?>
