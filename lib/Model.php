@@ -199,7 +199,7 @@ class Model
 	 *
 	 * This is the opposite of {@link attr_accessible $attr_accessible} and the format
 	 * for defining these are exactly the same.
-	 * 
+	 *
 	 * If the attribute is both accessible and protected, it is treated as protected.
 	 *
 	 * @var array
@@ -503,7 +503,7 @@ class Model
 				$to = $item['to'];
 				if ($this->$to)
 				{
-					$val =& $this->$to->$delegated_name;
+					$val =& $this->$to->__get($delegated_name);
 					return $val;
 				}
 				else
@@ -849,6 +849,121 @@ class Model
 		}
 
 		return true;
+	}
+
+	/**
+	 * Deletes records matching conditions in $options
+	 *
+	 * Does not instantiate models and therefore does not invoke callbacks
+	 *
+	 * Delete all using a hash:
+	 *
+	 * <code>
+	 * YourModel::delete_all(array('conditions' => array('name' => 'Tito')));
+	 * </code>
+	 *
+	 * Delete all using an array:
+	 *
+	 * <code>
+	 * YourModel::delete_all(array('conditions' => array('name = ?', 'Tito')));
+	 * </code>
+	 *
+	 * Delete all using a string:
+	 *
+	 * <code>
+	 * YourModel::delete_all(array('conditions' => 'name = "Tito"));
+	 * </code>
+	 *
+	 * An options array takes the following parameters:
+	 *
+	 * <ul>
+	 * <li><b>conditions:</b> Conditions using a string/hash/array</li>
+	 * <li><b>limit:</b> Limit number of records to delete (MySQL & Sqlite only)</li>
+	 * <li><b>order:</b> A SQL fragment for ordering such as: 'name asc', 'id desc, name asc' (MySQL & Sqlite only)</li>
+	 * </ul>
+	 *
+	 * @params array $options
+	 * return integer Number of rows affected
+	 */
+	public static function delete_all($options=array())
+	{
+		$table = static::table();
+		$conn = static::connection();
+		$sql = new SQLBuilder($conn, $table->get_fully_qualified_table_name());
+
+		$conditions = is_array($options) ? $options['conditions'] : $options;
+
+		if (is_array($conditions) && !is_hash($conditions))
+			call_user_func_array(array($sql, 'delete'), $conditions);
+		else
+			$sql->delete($conditions);
+
+		if (isset($options['limit']))
+			$sql->limit($options['limit']);
+
+		if (isset($options['order']))
+			$sql->order($options['order']);
+
+		$values = $sql->bind_values();
+		$ret = $conn->query(($table->last_sql = $sql->to_s()), $values);
+		return $ret->rowCount();
+	}
+
+	/**
+	 * Updates records using set in $options
+	 *
+	 * Does not instantiate models and therefore does not invoke callbacks
+	 *
+	 * Update all using a hash:
+	 *
+	 * <code>
+	 * YourModel::update_all(array('set' => array('name' => "Bob")));
+	 * </code>
+	 *
+	 * Update all using a string:
+	 *
+	 * <code>
+	 * YourModel::update_all(array('set' => 'name = "Bob"'));
+	 * </code>
+	 *
+	 * An options array takes the following parameters:
+	 *
+	 * <ul>
+	 * <li><b>set:</b> String/hash of field names and their values to be updated with
+	 * <li><b>conditions:</b> Conditions using a string/hash/array</li>
+	 * <li><b>limit:</b> Limit number of records to update (MySQL & Sqlite only)</li>
+	 * <li><b>order:</b> A SQL fragment for ordering such as: 'name asc', 'id desc, name asc' (MySQL & Sqlite only)</li>
+	 * </ul>
+	 *
+	 * @params array $options
+	 * return integer Number of rows affected
+	 */
+	public static function update_all($options=array())
+	{
+		$table = static::table();
+		$conn = static::connection();
+		$sql = new SQLBuilder($conn, $table->get_fully_qualified_table_name());
+
+		$sql->update($options['set']);
+
+		if (isset($options['conditions']) && ($conditions = $options['conditions']))
+		{
+			if (is_array($conditions) && !is_hash($conditions))
+				call_user_func_array(array($sql, 'where'), $conditions);
+			else
+				$sql->where($conditions);
+		}
+
+		if (isset($options['limit']))
+			$sql->limit($options['limit']);
+
+		if (isset($options['order']))
+			$sql->order($options['order']);
+
+		$values = $sql->bind_values();
+		$ret = $conn->query(($table->last_sql = $sql->to_s()), $values);
+		return $ret->rowCount();
+
 	}
 
 	/**
