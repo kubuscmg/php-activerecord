@@ -767,7 +767,7 @@ class Model
 	 * @param boolean $validate Set to true or false depending on if you want the validators to run or not
 	 * @return boolean True if the model was saved to the database otherwise false
 	 */
-	private function insert($validate=true)
+	protected function insert($validate=true)
 	{
 		$this->verify_not_readonly('insert');
 
@@ -826,7 +826,7 @@ class Model
 	 * @param boolean $validate Set to true or false depending on if you want the validators to run or not
 	 * @return boolean True if the model was saved to the database otherwise false
 	 */
-	private function update($validate=true)
+	protected function update($validate=true)
 	{
 		$this->verify_not_readonly('update');
 
