@@ -106,7 +106,7 @@ class Model
 	 *
 	 * @var array
 	 */
-	private $__relationships = array();
+	protected $__relationships = array();
 
 	/**
 	 * Flag that determines if a call to save() should issue an insert or an update sql statement
