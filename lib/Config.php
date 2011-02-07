@@ -194,13 +194,9 @@ class Config extends Singleton
 	 *
 	 * @param string $dir Directory path containing your models
 	 * @return void
-	 * @throws ConfigException if specified directory was not found
 	 */
 	public function set_model_directory($dir)
 	{
-		if (!file_exists($dir))
-			throw new ConfigException("Invalid or non-existent directory: $dir");
-
 		$this->model_directory = $dir;
 	}
 
@@ -208,9 +204,13 @@ class Config extends Singleton
 	 * Returns the model directory.
 	 *
 	 * @return string
+	 * @throws ConfigException if specified directory was not found
 	 */
 	public function get_model_directory()
 	{
+		if (!file_exists($this->model_directory))
+			throw new ConfigException('Invalid or non-existent directory: '.$this->model_directory);
+
 		return $this->model_directory;
 	}
 
@@ -263,20 +263,20 @@ class Config extends Singleton
 	}
 
 	/**
-	 * DEPRECATED
+	 * @deprecated
 	 */
 	public function get_date_format()
 	{
-		error_log('DEPRECATION WARNING: Config::get_date_format() has been deprecated and will be removed in a future version. Please ActiveRecord\Serialization::$DATETIME_FORMAT instead.');
+		trigger_error('Use ActiveRecord\Serialization::$DATETIME_FORMAT. Config::get_date_format() has been deprecated.', E_USER_DEPRECATED);
 		return Serialization::$DATETIME_FORMAT;
 	}
 
 	/**
-	 * DEPRECATED
+	 * @deprecated
 	 */
 	public function set_date_format($format)
 	{
-		error_log('DEPRECATION WARNING: Config::set_date_format() has been deprecated and will be removed in a future version. Please use ActiveRecord\Serialization::$DATETIME_FORMAT instead.');
+		trigger_error('Use ActiveRecord\Serialization::$DATETIME_FORMAT. Config::set_date_format() has been deprecated.', E_USER_DEPRECATED);
 		Serialization::$DATETIME_FORMAT = $format;
 	}
 
