@@ -48,10 +48,10 @@ abstract class Connection
 	 * @var array
 	 */
 	static $PDO_OPTIONS = array(
-		PDO::ATTR_CASE				=> PDO::CASE_LOWER,
-		PDO::ATTR_ERRMODE			=> PDO::ERRMODE_EXCEPTION,
-		PDO::ATTR_ORACLE_NULLS		=> PDO::NULL_NATURAL,
-		PDO::ATTR_STRINGIFY_FETCHES	=> false);
+		PDO::ATTR_CASE              => PDO::CASE_LOWER,
+		PDO::ATTR_ERRMODE           => PDO::ERRMODE_EXCEPTION,
+		PDO::ATTR_ORACLE_NULLS      => PDO::NULL_NATURAL,
+		PDO::ATTR_STRINGIFY_FETCHES => false);
 
 	/**
 	 * The quote character for stuff like column and field names.
@@ -159,10 +159,10 @@ abstract class Connection
 
 		$info = new \stdClass();
 		$info->protocol	= $url['scheme'];
-		$info->host			= $url['host'];
-		$info->db				= isset($url['path']) ? substr($url['path'],1) : null;
-		$info->user			= isset($url['user']) ? $url['user'] : null;
-		$info->pass			= isset($url['pass']) ? $url['pass'] : null;
+		$info->host     = $url['host'];
+		$info->db       = isset($url['path']) ? substr($url['path'],1) : null;
+		$info->user     = isset($url['user']) ? $url['user'] : null;
+		$info->pass     = isset($url['pass']) ? $url['pass'] : null;
 
 		$allow_blank_db = ($info->protocol == 'sqlite');
 
