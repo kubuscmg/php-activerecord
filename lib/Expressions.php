@@ -132,6 +132,8 @@ class Expressions
 
 			if (is_array($value))
 				$sql .= "$g$name IN(?)";
+			else if (is_null($value))
+				$sql .= "$g$name IS ?";
 			else
 				$sql .= "$g$name=?";
 
@@ -180,4 +182,5 @@ class Expressions
 		return "'" . str_replace("'","''",$value) . "'";
 	}
 }
+
 ?>
