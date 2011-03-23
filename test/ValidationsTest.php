@@ -135,6 +135,19 @@ class ValidationsTest extends DatabaseTest
 		$this->assert_equals(array('Name alias and x must be unique'), $book->errors->full_messages());
 	}
 
+	public function test_gh121_validates_uniqueness_of_null()
+	{
+		BookValidations::$validates_presence_of = array();
+		BookValidations::$validates_uniqueness_of[0] = array(array('name','special'));
+		$b = BookValidations::create(array('special' => 42));
+		$book = new BookValidations(array('special' => 42));
+		$this->assert_false($book->is_valid());
+
+		$book = new BookValidations(array('special' => 43));
+		$this->assert_true($book->is_valid());
+		$b->delete();
+	}
+
 	public function test_get_validation_rules()
 	{
 		$validators = BookValidations::first()->get_validation_rules();
