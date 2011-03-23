@@ -11,6 +11,7 @@
 
 @include_once 'Log.php';
 @include_once 'Log/file.php';
+require_once 'PHPUnit/Framework/TestCase.php';
 require_once 'SnakeCase_PHPUnit_Framework_TestCase.php';
 require_once 'DatabaseTest.php';
 require_once 'AdapterTest.php';
