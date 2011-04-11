@@ -3,7 +3,7 @@ include 'helpers/config.php';
 
 use ActiveRecord\Cache;
 
-class ActiveRecordCacheTest extends DatabaseTest
+class MemcacheActiveRecordCacheTest extends DatabaseTest
 {
 	public function set_up($connection_name=null)
 	{
@@ -12,9 +12,9 @@ class ActiveRecordCacheTest extends DatabaseTest
 			$this->markTestSkipped('The memcache extension is not available');
 			return;
 		}
-		
+
 		parent::set_up($connection_name);
-		ActiveRecord\Config::instance()->set_cache('memcache://localhost:11211');
+		ActiveRecord\Config::instance()->set_cache('memcache://localhost');
 	}
 
 	public function tear_down()
@@ -30,7 +30,7 @@ class ActiveRecordCacheTest extends DatabaseTest
 
 	public function test_explicit_default_expire()
 	{
-		ActiveRecord\Config::instance()->set_cache('memcache://localhost:11211',array('expire' => 1));
+		ActiveRecord\Config::instance()->set_cache('memcache://localhost',array('expire' => 1));
 		$this->assert_equals(1,Cache::$options['expire']);
 	}
 

@@ -3,7 +3,7 @@ include 'helpers/config.php';
 
 use ActiveRecord\Cache;
 
-class CacheTest extends SnakeCase_PHPUnit_Framework_TestCase
+class MemcacheCacheTest extends SnakeCase_PHPUnit_Framework_TestCase
 {
 	public function set_up()
 	{
@@ -12,8 +12,8 @@ class CacheTest extends SnakeCase_PHPUnit_Framework_TestCase
 			$this->markTestSkipped('The memcache extension is not available');
 			return;
 		}
-		
-		Cache::initialize('memcache://localhost:11211');
+
+		Cache::initialize('memcache://localhost');
 	}
 
 	public function tear_down()
@@ -73,7 +73,7 @@ class CacheTest extends SnakeCase_PHPUnit_Framework_TestCase
 
 		$this->assert_same(false, Cache::$adapter->read("1337"));
 	}
-	
+
 	public function test_namespace_is_set_properly()
 	{
 	  Cache::$options['namespace'] = 'myapp';
