@@ -21,5 +21,13 @@ class ApcCacheTest extends MemcacheCacheTest
 	{
 		// http://pecl.php.net/bugs/bug.php?id=13331
 	}
+
+	public function test_gh147_initialize_with_array()
+	{
+		Cache::initialize(array(
+			'adapter' => 'apc',
+		));
+		$this->assert_not_null(Cache::$adapter);
+	}
 }
 ?>

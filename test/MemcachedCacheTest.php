@@ -16,5 +16,28 @@ class MemcachedCacheTest extends MemcacheCacheTest
 
 		Cache::initialize('memcached://localhost');
 	}
+
+	public function test_gh147_initialize_with_array()
+	{
+		Cache::initialize(array(
+			'adapter' => 'memcached',
+		));
+		$this->assert_not_null(Cache::$adapter);
+	}
+
+	public function test_gh147_initialize_with_array_many_servers()
+	{
+		Cache::initialize(array(
+			'adapter' => 'memcached',
+			'servers' => array(
+				array('localhost:11211'),
+				array('localhost:11211', 'weight' => 2)
+			),
+			'options' => array(
+				Memcached::OPT_LIBKETAMA_COMPATIBLE => true,
+			),
+		));
+		$this->assert_not_null(Cache::$adapter);
+	}
 }
 ?>

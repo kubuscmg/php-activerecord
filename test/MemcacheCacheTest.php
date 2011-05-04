@@ -37,6 +37,26 @@ class MemcacheCacheTest extends SnakeCase_PHPUnit_Framework_TestCase
 		$this->assert_null(Cache::$adapter);
 	}
 
+	public function test_gh147_initialize_with_array()
+	{
+		Cache::initialize(array(
+			'adapter' => 'memcache',
+		));
+		$this->assert_not_null(Cache::$adapter);
+	}
+
+	public function test_gh147_initialize_with_array_many_servers()
+	{
+		Cache::initialize(array(
+			'adapter' => 'memcache',
+			'servers' => array(
+				array('localhost:11211'),
+				array('localhost:11211', 'weight' => 2)
+			),
+		));
+		$this->assert_not_null(Cache::$adapter);
+	}
+
 	public function test_get_returns_the_value()
 	{
 		$this->assert_equals("abcd", $this->cache_get());

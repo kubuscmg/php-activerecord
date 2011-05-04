@@ -23,13 +23,33 @@ class Memcache
 		$this->memcache = new \Memcache();
 		$options['port'] = isset($options['port']) ? $options['port'] : self::DEFAULT_PORT;
 
-		if (!@$this->memcache->connect($options['host'],$options['port']))
-			throw new CacheException("Could not connect to $options[host]:$options[port]");
+		if (isset($options['servers'])) {
+			foreach ($options['servers'] as $server) {
+				$defaults = array(
+					'weight' => 1,
+					'port' => self::DEFAULT_PORT,
+					'persistent' => true,
+				);
+				$server = parse_url($server[0]) + $server + $defaults;
+				if (!isset($server['host'])) {
+					$server['host'] = $server['path'];
+					unset($server['path']);
+				}
+				$this->memcache->addServer(
+					$server['host'],
+					$server['port'],
+					$server['persistent'],
+					$server['weight']
+				);
+			}
+		} else {
+			$this->memcache->addServer($options['host'], $options['port']);
+		}
 	}
 
 	public function flush()
 	{
-		$this->memcache->flush();
+		return $this->memcache->flush();
 	}
 
 	public function read($key)
@@ -39,7 +59,7 @@ class Memcache
 
 	public function write($key, $value, $expire)
 	{
-		$this->memcache->set($key,$value,null,$expire);
+		return $this->memcache->set($key,$value,null,$expire);
 	}
 }
 ?>
