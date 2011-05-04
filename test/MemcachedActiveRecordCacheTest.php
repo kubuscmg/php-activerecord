@@ -13,6 +13,12 @@ class MemcachedActiveRecordCacheTest extends DatabaseTest
 			return;
 		}
 
+		$m = new \Memcached();
+		$m->addServer('localhost', 11211);
+		if (!$m->getVersion()) {
+			$this->markTestSkipped('The memcache server is not running');
+		}
+
 		parent::set_up($connection_name);
 		ActiveRecord\Config::instance()->set_cache('memcached://localhost');
 	}

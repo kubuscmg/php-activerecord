@@ -28,6 +28,12 @@ class ApcCacheTest extends MemcacheCacheTest
 			'adapter' => 'apc',
 		));
 		$this->assert_not_null(Cache::$adapter);
+		$this->assert_equals('ActiveRecord\\Apc', get_class(Cache::$adapter));
+	}
+
+	public function test_gh147_initialize_with_array_many_servers()
+	{
+		// not options neither many servers here
 	}
 }
 ?>

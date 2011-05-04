@@ -13,6 +13,10 @@ class MemcacheCacheTest extends SnakeCase_PHPUnit_Framework_TestCase
 			return;
 		}
 
+		if (!@memcache_connect('localhost')) {
+			$this->markTestSkipped('The memcache server is not running');
+		}
+
 		Cache::initialize('memcache://localhost');
 	}
 

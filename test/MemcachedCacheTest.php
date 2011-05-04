@@ -14,6 +14,12 @@ class MemcachedCacheTest extends MemcacheCacheTest
 			return;
 		}
 
+		$m = new \Memcached();
+		$m->addServer('localhost', 11211);
+		if (!$m->getVersion()) {
+			$this->markTestSkipped('The memcache server is not running');
+		}
+
 		Cache::initialize('memcached://localhost');
 	}
 
