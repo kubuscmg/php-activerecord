@@ -135,6 +135,43 @@ class ValidationsTest extends DatabaseTest
 		$this->assert_equals(array('Name alias and x must be unique'), $book->errors->full_messages());
 	}
 
+	public function test_gh121_validates_uniqueness_of_null()
+	{
+		BookValidations::$validates_presence_of = array();
+		BookValidations::$validates_uniqueness_of = array(array('name'));
+		$book1 = BookValidations::create(array('name' => null));
+		$book2 = BookValidations::create(array('name' => null));
+		$book3 = BookValidations::create(array('name' => null));
+		$this->assert_true($book1->id > 0);
+		$this->assert_true($book2->id > 0);
+
+		BookValidations::table()->last_sql = null;
+
+		$book = new BookValidations(array('name' => null));
+		$this->assert_true($book->is_valid());
+
+		$this->assert_null(BookValidations::table()->last_sql);
+
+		$book1->delete();
+		$book2->delete();
+	}
+
+	public function test_gh121_validates_uniqueness_of_null_multiple_key()
+	{
+		BookValidations::$validates_presence_of = array();
+		BookValidations::$validates_uniqueness_of[0] = array(array('name','special'));
+		$b = BookValidations::create(array('special' => 42));
+
+		$book = new BookValidations(array('special' => 42));
+		$this->assert_false($book->is_valid());
+
+		$book = new BookValidations(array('special' => 43));
+		$this->assert_true($book->is_valid());
+
+		$b->delete();
+	}
+
+
 	public function test_get_validation_rules()
 	{
 		$validators = BookValidations::first()->get_validation_rules();
@@ -162,5 +199,6 @@ class ValidationsTest extends DatabaseTest
 		$this->assert_true($book->errors->is_invalid('name'));
 		$this->assert_equals(BookValidations::$custom_validator_error_msg, $book->errors->on('name'));
 	}
-};
+}
+
 ?>
