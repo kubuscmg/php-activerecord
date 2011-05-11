@@ -106,7 +106,7 @@ class LoggingTest extends SnakeCase_PHPUnit_Framework_TestCase
         $this->assert_equals('1', $values);
 
         $time = $this->assert_log_has_time();
-        $this->assert_equals('1.000', $time);
+        $this->assert_equals(1, intval($time));
     }
 
     public function test_query_with_null()
