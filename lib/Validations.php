@@ -585,6 +585,7 @@ class Validations
 
 			$sql = "";
 			$conditions = array("");
+			$unique = true;
 
 			if ($pk_value === null)
 				$sql = "{$pk[0]} is not null";
@@ -598,14 +599,15 @@ class Validations
 			{
 				$field = $this->model->get_real_attribute_name($field);
 				$value = $this->model->$field;
-				$sql .= " and {$field}";
-				$sql .= !is_null($value) ? '=?' : ' is ?';
-				array_push($conditions,$value);
+				if (!is_null($value)) {
+					$sql .= " and {$field}=?";
+					array_push($conditions,$value);
+					$unique = false;
+				}
 			}
 
 			$conditions[0] = $sql;
-
-			if ($this->model->exists(array('conditions' => $conditions)))
+			if (!$unique && $this->model->exists(array('conditions' => $conditions)))
 				$this->record->add($add_record, $options['message']);
 		}
 	}
