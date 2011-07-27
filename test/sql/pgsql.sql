@@ -98,3 +98,6 @@ CREATE TABLE user_newsletters(
   user_id int not null,
   newsletter_id int not null
 );
+
+-- reproduces issue GH-96 for testing
+CREATE INDEX user_newsletters_id_and_user_id_idx ON user_newsletters USING btree(id, user_id);

@@ -106,7 +106,7 @@ class Model
 	 *
 	 * @var array
 	 */
-	private $__relationships = array();
+	protected $__relationships = array();
 
 	/**
 	 * Flag that determines if a call to save() should issue an insert or an update sql statement
@@ -417,6 +417,26 @@ class Model
 				return $this->$item['to']->$delegated_name = $value;
 		}
 
+		$table = static::table();
+		if ($relationship = $table->get_relationship($name)
+		) {
+			if (is_null($value)) {
+				$this->__relationships[$name] = $value;
+				return $this->assign_attribute($relationship->foreign_key[0], $value);
+			} elseif (
+				is_object($value) &&
+			    $value instanceof $relationship->class_name
+			) {
+				$this->__relationships[$name] = $value;
+				$pk = $value->get_primary_key(0);
+				return $this->assign_attribute(
+					$relationship->foreign_key[0],
+					$value->is_new_record() ? null : $value->{$pk[0]}
+				);
+			} else {
+				throw new RelationshipException();
+			}
+		}
 		throw new UndefinedPropertyException(get_called_class(),$name);
 	}
 
@@ -444,10 +464,10 @@ class Model
 		if ($value instanceof \DateTime)
 			$value = new DateTime($value->format('Y-m-d H:i:s T'));
 
-		// make sure DateTime values know what model they belong to so
-		// dirty stuff works when calling set methods on the DateTime object
-		if ($value instanceof DateTime)
-			$value->attribute_of($this,$name);
+		// make sure Attribute values know what model they belong to so
+		// dirty stuff works when calling set methods on the Attribute object
+		if ($value instanceof InterfaceAttribute)
+			$value->attribute_of($this, $name);
 
 		$this->attributes[$name] = $value;
 		$this->flag_dirty($name);
@@ -744,7 +764,7 @@ class Model
 	 * @param boolean $validate True if the validators should be run
 	 * @return Model
 	 */
-	public static function create($attributes, $validate=true)
+	public static function create(array $attributes=array(), $validate=true)
 	{
 		$class_name = get_called_class();
 		$model = new $class_name($attributes);
@@ -777,7 +797,7 @@ class Model
 	 * @param boolean $validate Set to true or false depending on if you want the validators to run or not
 	 * @return boolean True if the model was saved to the database otherwise false
 	 */
-	private function insert($validate=true)
+	protected function insert($validate=true)
 	{
 		$this->verify_not_readonly('insert');
 
@@ -836,7 +856,7 @@ class Model
 	 * @param boolean $validate Set to true or false depending on if you want the validators to run or not
 	 * @return boolean True if the model was saved to the database otherwise false
 	 */
-	private function update($validate=true)
+	protected function update($validate=true)
 	{
 		$this->verify_not_readonly('update');
 
@@ -1404,7 +1424,7 @@ class Model
 		$options = static::extract_and_validate_options($args);
 		$options['select'] = 'COUNT(*)';
 
-		if (!empty($args))
+		if (!empty($args) && !is_null($args[0]) && !empty($args[0]))
 		{
 			if (is_hash($args[0]))
 				$options['conditions'] = $args[0];
@@ -1415,6 +1435,7 @@ class Model
 		$table = static::table();
 		$sql = $table->options_to_sql($options);
 		$values = $sql->get_where_values();
+		$table->last_sql = $sql->to_s();
 		return static::connection()->query_and_fetch_one($sql->to_s(),$values);
 	}
 
@@ -1722,30 +1743,30 @@ class Model
 		return $this->serialize('Xml', $options);
 	}
 
-   /**
-   * Returns an CSV representation of this model.
-   * Can take optional delimiter and enclosure
-   * (defaults are , and double quotes)
-   *
-   * Ex:
-   * <code>
-   * ActiveRecord\CsvSerializer::$delimiter=';';
-   * ActiveRecord\CsvSerializer::$enclosure='';
-   * YourModel::find('first')->to_csv(array('only'=>array('name','level')));
-   * returns: Joe,2
-   *
-   * YourModel::find('first')->to_csv(array('only_header'=>true,'only'=>array('name','level')));
-   * returns: name,level
-   * </code>
-   *
-   * @see Serialization
-   * @param array $options An array containing options for csv serialization (see {@link Serialization} for valid options)
-   * @return string CSV representation of the model
-   */
-  public function to_csv(array $options=array())
-  {
-    return $this->serialize('Csv', $options);
-  }
+	/**
+	* Returns an CSV representation of this model.
+	* Can take optional delimiter and enclosure
+	* (defaults are , and double quotes)
+	*
+	* Ex:
+	* <code>
+	* ActiveRecord\CsvSerializer::$delimiter=';';
+	* ActiveRecord\CsvSerializer::$enclosure='';
+	* YourModel::find('first')->to_csv(array('only'=>array('name','level')));
+	* returns: Joe,2
+	*
+	* YourModel::find('first')->to_csv(array('only_header'=>true,'only'=>array('name','level')));
+	* returns: name,level
+	* </code>
+	*
+	* @see Serialization
+	* @param array $options An array containing options for csv serialization (see {@link Serialization} for valid options)
+	* @return string CSV representation of the model
+	*/
+	public function to_csv(array $options=array())
+	{
+		return $this->serialize('Csv', $options);
+	}
 
 	/**
 	 * Returns an Array representation of this model.
@@ -1850,5 +1871,6 @@ class Model
 		}
 		return true;
 	}
-};
+}
+
 ?>
